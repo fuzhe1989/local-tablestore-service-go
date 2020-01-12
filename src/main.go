@@ -4,14 +4,17 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/buaazp/fasthttprouter"
+	"github.com/fuzhe1989/local-tablestore-service-go/src/protocol"
 	"github.com/golang/protobuf/proto"
 	"github.com/valyala/fasthttp"
 )
 
 var (
-	addr = flag.String("addr", ":8080", "TCP address to listen to")
+	addr                = flag.String("addr", ":8080", "TCP address to listen to")
+	predefinedInstances = flag.String("predefined-instances", "test", "Split by comma(',') if predefine multiple instances")
 )
 
 const (
@@ -34,7 +37,7 @@ const (
 func main() {
 	flag.Parse()
 
-	server := Server{}
+	server := NewServer(strings.Split(*predefinedInstances, ","))
 
 	router := fasthttprouter.New()
 	router.GET("/", requestHandler)
@@ -119,7 +122,7 @@ func handleCreateTable(ctx *fasthttp.RequestCtx) {
 	s += fmt.Sprintf("Signature is %s\n", otsHeader.Signature)
 
 	body := ctx.PostBody()
-	request := CreateTableRequest{}
+	request := protocol.CreateTableRequest{}
 	err := proto.Unmarshal(body, &request)
 	if err != nil {
 		s += fmt.Sprintf("Parse Body Error: %s", err)
